@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Demande de congé</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+    }
+    label, input, select, textarea, button {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+    }
+    button {
+      margin-top: 15px;
+    }
+    #logout-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      margin-top: 30px;
+      padding: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>Formulaire de demande de congé</h2>
+  <form id="formulaire">
+    <label>Date de début :</label>
+    <input type="date" id="debut" required>
+
+    <label>Date de fin :</label>
+    <input type="date" id="fin" required>
+
+    <label>Type de congé :</label>
+    <select id="type">
+      <option>CP</option>
+      <option>CS</option>
+      <option>CE</option>
+      <option>RTT</option>
+      <option>Récupération</option>
+      <option>Autres</option>
+    </select>
+
+    <label>Commentaire (facultatif) :</label>
+    <textarea id="commentaire"></textarea>
+
+    <button type="submit">Envoyer</button>
+  </form>
+
+  <button id="logout-btn">Se déconnecter</button>
+  <p id="message"></p>
+
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://swqmlmrxaiesskxahzjn.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3cW1sbXJ4YWllc3NreGFoempuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxNzEyNTAsImV4cCI6MjA2MDc0NzI1MH0.d1gCibKEqldG7wqklutWBUlx8sQ2kz3yuVGG1VBMa60',
+      {
+        auth: {
+          persistSession: true,
+          storage: window.sessionStorage
+        }
+      }
+    );
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Vérifie la session
+      supabaseClient.auth.getUser().then(async ({ data, error }) => {
+        if (error || !data.user) {
+          document.getElementById('message').innerText = "Veuillez vous connecter.";
+          document.getElementById('formulaire').style.display = 'none';
+          return;
+        }
+
+        const user = data.user;
+
+        document.getElementById('formulaire').addEventListener('submit', async (e) => {
+          e.preventDefault();
+
+          const nom = document.getElementById('nom').value;
+          const debut = document.getElementById('debut').value;
+          const fin = document.getElementById('fin').value;
+          const type = document.getElementById('type').value;
+          const commentaire = document.getElementById('commentaire').value;
+
+          const { data: profil, error: profilError } = await supabaseClient
+            .from('profils')
+            .select('manager')
+            .eq('id', user.id)
+            .single();
+
+          if (profilError) {
+            document.getElementById('message').innerText = "Erreur profil : " + profilError.message;
+            return;
+          }
+
+          const { error: insertError } = await supabaseClient
+            .from('demandes_conges')
+            .insert([{
+              nom,
+              debut,
+              fin,
+              type_conge: type,
+              commentaire,
+              manager: profil.manager
+            }]);
+
+          if (insertError) {
+            document.getElementById('message').innerText = "Erreur : " + insertError.message;
+          } else {
+            document.getElementById('message').innerText = "Demande envoyée avec succès !";
+            document.getElementById('formulaire').reset();
+          }
+        });
+      });
+
+      // Déconnexion
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await supabaseClient.auth.signOut();
+        window.location.href = "login.html";
+      });
+    });
+  </script>
+</body>
+</html>
