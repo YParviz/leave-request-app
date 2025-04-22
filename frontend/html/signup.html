@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Créer un compte</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
       font-family: Arial;
@@ -44,29 +43,18 @@
   <p id="message"></p>
 
   <script>
-    const supabase = window.supabase.createClient(
-      'https://swqmlmrxaiesskxahzjn.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3cW1sbXJ4YWllc3NreGFoempuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxNzEyNTAsImV4cCI6MjA2MDc0NzI1MH0.d1gCibKEqldG7wqklutWBUlx8sQ2kz3yuVGG1VBMa60',
-      {
-        auth: {
-          persistSession: true,
-          storage: window.sessionStorage
-        }
-      }
-    );
-
-    // Charger automatiquement les managers dans la liste déroulante
+    // Charger la liste des managers depuis ton backend
     async function chargerManagers() {
-      const response = await fetch('/api/managers');
-      const managers = await response.json();
+      const res = await fetch('http://localhost:3000/api/managers');
+      const data = await res.json();
 
-      if (!managers || managers.error) {
-        console.error("Erreur chargement managers:", managers?.error || "Erreur inconnue");
+      if (data.error) {
+        console.error("Erreur lors du chargement des managers:", data.error);
         return;
       }
 
       const select = document.getElementById("manager");
-      managers.forEach(manager => {
+      data.forEach(manager => {
         const option = document.createElement("option");
         option.value = manager.email;
         option.textContent = `${manager.nom} (${manager.email})`;
@@ -74,7 +62,6 @@
       });
     }
 
-    // Exécuter au chargement de la page
     window.addEventListener("DOMContentLoaded", chargerManagers);
 
     // Gérer la soumission du formulaire
@@ -84,10 +71,10 @@
       const password = document.getElementById("password").value;
       const manager = document.getElementById("manager").value;
 
-      const response = await fetch('/api/signup', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3000/api/signup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ nom, email, password, manager })
       });
@@ -96,11 +83,12 @@
 
       if (data.error) {
         document.getElementById("message").innerText = "Erreur : " + data.error;
-        return;
+      } else {
+        document.getElementById("message").innerText = "Inscription réussie ! Redirection...";
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 1000);
       }
-
-      document.getElementById("message").innerText = "Inscription réussie ! Redirection...";
-      setTimeout(() => window.location.href = "demande.html", 1000);
     });
   </script>
 </body>
