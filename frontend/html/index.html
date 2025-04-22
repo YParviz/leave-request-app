@@ -42,26 +42,36 @@
       const password = document.getElementById("password").value;
 
       // Envoi de la requête POST au backend
-      const response = await fetch('https://leave-request-app.onrender.com/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      try {
+        const response = await fetch('https://leave-request-app.onrender.com/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
 
-      const result = await response.json();
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || 'Erreur de connexion');
+        }
 
-      if (result.error) {
-        document.getElementById("message").innerText = "Erreur : " + result.error;
-        return;
-      }
+        // Parser la réponse en JSON
+        const result = await response.json();
 
-      // Redirection selon le rôle
-      if (result.role === "manager") {
-        window.location.href = "gestion-managers.html";
-      } else {
-        window.location.href = "demande.html";
+        if (result.error) {
+          document.getElementById("message").innerText = "Erreur : " + result.error;
+          return;
+        }
+
+        // Redirection selon le rôle
+        if (result.role === "manager") {
+          window.location.href = "gestion-managers.html";
+        } else {
+          window.location.href = "demande.html";
+        }
+      } catch (error) {
+        document.getElementById("message").innerText = "Erreur : " + error.message;
       }
     });
   </script>
