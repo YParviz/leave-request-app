@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Demande de congé</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
       font-family: Arial;
@@ -59,19 +58,13 @@
   <p id="message"></p>
 
   <script>
-    const supabaseClient = window.supabase.createClient(
-      'https://swqmlmrxaiesskxahzjn.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3cW1sbXJ4YWllc3NreGFoempuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxNzEyNTAsImV4cCI6MjA2MDc0NzI1MH0.d1gCibKEqldG7wqklutWBUlx8sQ2kz3yuVGG1VBMa60',
-      {
-        auth: {
-          persistSession: true,
-          storage: window.sessionStorage
-        }
-      }
-    );
-
     document.addEventListener('DOMContentLoaded', () => {
-      // Vérifie la session
+      // Connexion avec Supabase (juste pour récupérer l'utilisateur)
+      const supabaseClient = window.supabase.createClient(
+        'https://swqmlmrxaiesskxahzjn.supabase.co',
+        'your-public-api-key' // Remplace avec ta clé publique
+      );
+
       supabaseClient.auth.getUser().then(async ({ data, error }) => {
         if (error || !data.user) {
           document.getElementById('message').innerText = "Veuillez vous connecter.";
@@ -81,51 +74,51 @@
 
         const user = data.user;
 
+        // Soumission du formulaire
         document.getElementById('formulaire').addEventListener('submit', async (e) => {
           e.preventDefault();
 
-          const nom = document.getElementById('nom').value;
           const debut = document.getElementById('debut').value;
           const fin = document.getElementById('fin').value;
           const type = document.getElementById('type').value;
           const commentaire = document.getElementById('commentaire').value;
 
-          const { data: profil, error: profilError } = await supabaseClient
-            .from('profils')
-            .select('manager')
-            .eq('id', user.id)
-            .single();
-
-          if (profilError) {
-            document.getElementById('message').innerText = "Erreur profil : " + profilError.message;
-            return;
-          }
-
-          const { error: insertError } = await supabaseClient
-            .from('demandes_conges')
-            .insert([{
-              nom,
+          // Envoyer la demande de congé au backend
+          const response = await fetch('http://localhost:3000/demandes_conges', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              userId: user.id,  // Utiliser l'ID de l'utilisateur
               debut,
               fin,
-              type_conge: type,
-              commentaire,
-              manager: profil.manager
-            }]);
+              type,
+              commentaire
+            })
+          });
 
-          if (insertError) {
-            document.getElementById('message').innerText = "Erreur : " + insertError.message;
+          const data = await response.json();
+
+          if (data.error) {
+            document.getElementById('message').innerText = "Erreur : " + data.error;
           } else {
             document.getElementById('message').innerText = "Demande envoyée avec succès !";
             document.getElementById('formulaire').reset();
           }
         });
       });
+    });
 
-      // Déconnexion
-      document.getElementById('logout-btn').addEventListener('click', async () => {
-        await supabaseClient.auth.signOut();
-        window.location.href = "login.html";
-      });
+    // Gestion de la déconnexion
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      const supabaseClient = window.supabase.createClient(
+        'https://swqmlmrxaiesskxahzjn.supabase.co',
+        'your-public-api-key' // Remplace avec ta clé publique
+      );
+
+      await supabaseClient.auth.signOut();
+      window.location.href = "signup.html";
     });
   </script>
 </body>

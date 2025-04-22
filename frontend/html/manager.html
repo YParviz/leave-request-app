@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestion des demandes de congé</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+      border-collapse: collapse;
+      width: 100%;
+      padding: 10px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button.refuser {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <h2>Demandes de congé à valider</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Type de congé</th>
+        <th>Début</th>
+        <th>Fin</th>
+        <th>Commentaire</th>
+        <th>Statut</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tableau">
+      <!-- Les demandes de congé seront ajoutées ici -->
+    </tbody>
+  </table>
+
+  <script>
+    async function chargerDemandes() {
+      try {
+        // On récupère l'utilisateur connecté
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (!userData) {
+          alert("Veuillez vous connecter pour accéder à cette page.");
+          return;
+        }
+        
+        // Envoi de la requête pour récupérer les demandes de congé
+        const response = await axios.post('http://localhost:3000/managers/demandes', {
+          userId: userData.id
+        });
+
+        const demandes = response.data.demandes;
+        const tableau = document.getElementById('tableau');
+        tableau.innerHTML = '';
+        demandes.forEach(demande => {
+          const ligne = document.createElement('tr');
+          ligne.innerHTML = `
+            <td>${demande.nom}</td>
+            <td>${demande.type_conge}</td>
+            <td>${demande.debut}</td>
+            <td>${demande.fin}</td>
+            <td>${demande.commentaire || ''}</td>
+            <td>${demande.statut || 'En attente'}</td>
+            <td>
+              <button onclick="changerStatut(${demande.id}, 'Validé')">Valider</button>
+              <button onclick="changerStatut(${demande.id}, 'Refusé')" class="refuser">Refuser</button>
+            </td>
+          `;
+          tableau.appendChild(ligne);
+        });
+      } catch (error) {
+        console.error('Erreur de récupération des demandes de congé :', error);
+      }
+    }
+
+    async function changerStatut(id, statut) {
+      try {
+        // Envoi de la requête pour changer le statut de la demande
+        await axios.put(`http://localhost:3000/demandes_conges/${id}`, { statut });
+
+        // Recharger les demandes après mise à jour
+        chargerDemandes();
+      } catch (error) {
+        alert('Erreur : ' + error.message);
+      }
+    }
+
+    chargerDemandes();
+  </script>
+</body>
+</html>

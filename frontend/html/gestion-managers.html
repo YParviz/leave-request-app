@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestion des Managers</title>
+  <script>
+    async function chargerManagers() {
+      const response = await fetch('http://localhost:3000/managers');
+      const data = await response.json();
+      const tbody = document.querySelector("#table-managers tbody");
+      tbody.innerHTML = "";
+
+      if (data.error) {
+        console.error("Erreur chargement :", data.error);
+        return;
+      }
+
+      data.forEach(manager => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><input value="${manager.nom}" onchange="modifierNom('${manager.id}', this.value)"></td>
+          <td>${manager.email}</td>
+          <td>
+            <button class="danger" onclick="supprimerManager('${manager.id}')">Supprimer</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function ajouterManager() {
+      const nom = document.getElementById("new-nom").value;
+      const email = document.getElementById("new-email").value;
+      const password = document.getElementById("new-password").value;
+
+      const response = await fetch('http://localhost:3000/managers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password, nom })
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        alert("Erreur création du manager: " + data.error);
+        return;
+      }
+
+      document.getElementById("new-nom").value = "";
+      document.getElementById("new-email").value = "";
+      document.getElementById("new-password").value = "";
+      chargerManagers();
+    }
+
+    async function modifierNom(id, nouveauNom) {
+      // Ajouter la logique de modification ici si nécessaire.
+    }
+
+    async function supprimerManager(id) {
+      if (!confirm("Supprimer ce manager ?")) return;
+
+      const response = await fetch(`http://localhost:3000/managers/${id}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        alert("Erreur suppression : " + data.error);
+        return;
+      }
+
+      chargerManagers();
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      chargerManagers();
+    });
+  </script>
+  <style>
+    /* Ajoutez ici vos styles */
+  </style>
+</head>
+<body>
+
+  <h2>Gestion des Managers</h2>
+
+  <div>
+    <h3>Ajouter un Manager</h3>
+    <input type="text" id="new-nom" placeholder="Nom complet">
+    <input type="email" id="new-email" placeholder="Email">
+    <input type="password" id="new-password" placeholder="Mot de passe">
+    <button class="success" onclick="ajouterManager()">Créer</button>
+  </div>
+
+  <h3>Liste des Managers</h3>
+  <table id="table-managers">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Email</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+</body>
+</html>

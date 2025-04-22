@@ -1,0 +1,25 @@
+body {
+    font-family: Arial;
+    max-width: 400px;
+    margin: auto;
+    padding: 20px;
+  }
+  
+  input, select, button {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+  }
+  
+  button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  #message {
+    margin-top: 15px;
+  }
+  
