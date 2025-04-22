@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000; // Utiliser le port dynamique de Render o
 
 // Configuration CORS pour accepter les requêtes venant de ton frontend déployé sur Render
 const corsOptions = {
-  origin: ['https://leave-request-app-1.onrender.com'], // URL de ton frontend
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Méthodes autorisées
   allowedHeaders: ['Content-Type', 'Authorization'], // Entêtes autorisés
 };
